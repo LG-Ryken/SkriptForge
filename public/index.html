@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SkriptForge — Visual Skript Editor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@400;500;600;700;800&display=swap">
+<script src="https://unpkg.com/blockly/blockly_compressed.js"></script>
+<script src="https://unpkg.com/blockly/blocks_compressed.js"></script>
+<script src="https://unpkg.com/blockly/msg/en.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg0: #0c0e14;
+    --bg1: #13151f;
+    --bg2: #1a1d27;
+    --bg3: #21253a;
+    --border: #2a2e3e;
+    --border2: #363b52;
+    --text: #e8e8ec;
+    --text2: #9498b0;
+    --text3: #555a72;
+    --green: #5b9e3f;
+    --green2: #7dba5c;
+    --green-dark: #3d7029;
+    --blue: #5fa8e8;
+    --orange: #e2884a;
+    --purple: #c678dd;
+    --amber: #d19a66;
+    --red: #e06c75;
+    --teal: #56b6c2;
+  }
+
+  html, body { height: 100%; overflow: hidden; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg0);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── TOPBAR ── */
+  .topbar {
+    height: 50px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    flex-shrink: 0;
+    z-index: 10;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 800;
+    font-size: 16px;
+    letter-spacing: -0.02em;
+    color: #fff;
+  }
+
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: var(--green);
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    box-shadow: 0 3px 0 var(--green-dark), inset 0 1px 0 rgba(255,255,255,0.18);
+  }
+
+  .logo em { color: var(--green2); font-style: normal; }
+
+  .topbar-center {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .tab {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: 0.02em;
+  }
+  .tab:hover { background: var(--bg3); color: var(--text); }
+  .tab.active { background: var(--bg0); border-color: var(--green); color: var(--green2); }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .pill {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 4px;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .pill-green { background: #1a3512; color: var(--green2); border: 1px solid #2f5c1e; }
+  .pill-blue  { background: #122340; color: var(--blue);  border: 1px solid #1e3f6a; }
+
+  .btn {
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 7px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-ghost { background: var(--bg3); color: var(--text2); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: #2a2e45; color: var(--text); }
+  .btn-primary { background: var(--green); color: #fff; box-shadow: 0 2px 0 var(--green-dark); }
+  .btn-primary:hover { filter: brightness(1.1); }
+  .btn-danger  { background: #3a1a1a; color: var(--red); border: 1px solid #5a2828; }
+  .btn-danger:hover { background: #4a2020; }
+
+  /* ── WORKSPACE ── */
+  .workspace {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── SIDEBAR (category palette) ── */
+  .sidebar {
+    width: 48px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 0;
+    gap: 4px;
+    flex-shrink: 0;
+    z-index: 5;
+  }
+
+  .sidebar-sep { width: 28px; height: 1px; background: var(--border); margin: 4px 0; }
+
+  .sidebar-btn {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text3);
+    cursor: pointer;
+    font-size: 17px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .sidebar-btn:hover { background: var(--bg3); color: var(--text2); }
+  .sidebar-btn.active { background: var(--bg0); color: var(--green2); }
+  .sidebar-btn::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 46px;
+    background: var(--bg2);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: all 0.15s;
+    z-index: 100;
+  }
+  .sidebar-btn:hover::after { opacity: 1; transform: translateX(0); }
+
+  /* ── BLOCKLY PANEL ── */
+  .editor-panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    height: 36px;
+    background: var(--bg1);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    gap: 10px;
+    flex-shrink: 0;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+
+  .panel-header-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+  #blocklyDiv { flex: 1; overflow: hidden; }
+
+  /* ── DIVIDER ── */
+  .divider {
+    width: 4px;
+    background: var(--border);
+    cursor: col-resize;
+    flex-shrink: 0;
+    transition: background 0.15s;
+    position: relative;
+  }
+  .divider:hover, .divider.dragging { background: var(--green); }
+  .divider::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 2px; height: 40px;
+    border-radius: 2px;
+    background: inherit;
+  }
+
+  /* ── CODE PANEL ── */
+  .code-panel {
+    display: flex;
+    flex-direction: column;
+    width: 40%;
+    min-width: 280px;
+    overflow: hidden;
+    background: var(--bg0);
+  }
+
+  .code-header {
+    height: 36px;
+    background: var(--bg1);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    flex-shrink: 0;
+  }
+
+  .code-lang {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text3);
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .live-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;box-shadow:0 0 4px var(--green)} 50%{opacity:.4;box-shadow:none} }
+
+  .code-actions { display: flex; gap: 6px; }
+
+  #codeArea {
+    flex: 1;
+    overflow: auto;
+    padding: 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.75;
+    white-space: pre;
+    color: var(--text);
+    background: transparent;
+    user-select: text;
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 12px;
+    color: var(--text3);
+    user-select: none;
+    padding: 32px;
+    text-align: center;
+  }
+  .empty-state .icon { font-size: 48px; opacity: 0.3; }
+  .empty-state p { font-size: 13px; line-height: 1.6; }
+
+  /* ── SYNTAX COLORS ── */
+  .sk-comment  { color: #3e4560; }
+  .sk-event    { color: #e2884a; font-weight: 600; }
+  .sk-condition{ color: #5fa8e8; }
+  .sk-action   { color: #98c379; }
+  .sk-effect   { color: #c678dd; }
+  .sk-variable { color: #d19a66; }
+  .sk-string   { color: #98c379; }
+  .sk-number   { color: #d19a66; }
+  .sk-keyword  { color: #56b6c2; }
+  .sk-blank    { }
+
+  /* ── STATUSBAR ── */
+  .statusbar {
+    height: 26px;
+    background: var(--green-dark);
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+  .status-item {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.7);
+    display: flex; align-items: center; gap: 5px;
+  }
+  .status-item span { color: #fff; }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 36px; right: 20px;
+    background: var(--green);
+    color: #fff;
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.2s;
+    pointer-events: none;
+    z-index: 9999;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* ── MODAL (Save/Load) ── */
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.65);
+    z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .modal-backdrop.open { opacity: 1; pointer-events: all; }
+
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    width: 480px;
+    max-height: 70vh;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    transform: scale(0.95); transition: transform 0.2s;
+  }
+  .modal-backdrop.open .modal { transform: scale(1); }
+
+  .modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-header h3 { font-size: 15px; font-weight: 700; }
+  .modal-close { background: none; border: none; color: var(--text2); cursor: pointer; font-size: 20px; line-height: 1; }
+  .modal-body { padding: 16px 20px; flex: 1; overflow-y: auto; }
+  .modal-footer { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+
+  .input-group { margin-bottom: 14px; }
+  .input-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .input-group input, .input-group select {
+    width: 100%;
+    background: var(--bg0);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 8px 12px;
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    outline: none;
+  }
+  .input-group input:focus, .input-group select:focus { border-color: var(--green); }
+  .input-group select option { background: var(--bg2); }
+
+  .script-list { display: flex; flex-direction: column; gap: 6px; }
+  .script-item {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .script-item:hover { border-color: var(--green); }
+  .script-item .name { font-size: 13px; font-weight: 600; }
+  .script-item .meta { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .script-item-del { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 16px; padding: 2px 6px; border-radius: 4px; }
+  .script-item-del:hover { color: var(--red); background: rgba(224,108,117,0.1); }
+
+  /* Blockly overrides */
+  .blocklyMainBackground { stroke: none !important; }
+  .blocklyToolboxDiv {
+    background: var(--bg2) !important;
+    border-right: 1px solid var(--border) !important;
+  }
+  .blocklyFlyoutBackground { fill: #1e2130 !important; fill-opacity: 1 !important; }
+  .blocklyTreeLabel { color: #ccc !important; font-family: 'Outfit', sans-serif !important; font-size: 13px !important; font-weight: 500 !important; }
+  .blocklyTreeRow { border-radius: 4px !important; }
+  .blocklyTreeRow:hover:not(.blocklyTreeSelected) { background: #23263a !important; }
+  .blocklyTreeSelected { background: #1e3818 !important; }
+  .blocklyTreeSelected .blocklyTreeLabel { color: var(--green2) !important; }
+  .blocklyScrollbarHandle { fill: #2a2e3e !important; }
+  .blocklyText { font-family: 'Outfit', sans-serif !important; font-size: 12px !important; }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-icon">🟩</div>
+    Skript<em>Forge</em>
+  </div>
+  <div class="topbar-center">
+    <button class="tab active" onclick="setTab(this,'workspace')" id="tab-workspace">Workspace</button>
+    <button class="tab" onclick="setTab(this,'library')" id="tab-library">Script Library</button>
+    <button class="tab" onclick="setTab(this,'help')" id="tab-help">Reference</button>
+  </div>
+  <div class="topbar-right">
+    <span class="pill pill-green">Skript 2.9</span>
+    <span class="pill pill-blue">MC 26.1.X</span>
+    <button class="btn btn-ghost" onclick="openSave()">💾 Save</button>
+    <button class="btn btn-ghost" onclick="openLoad()">📂 Load</button>
+    <button class="btn btn-danger" onclick="clearWs()">🗑 Clear</button>
+    <button class="btn btn-primary" onclick="copyCode()" id="copyBtn">📋 Copy .sk</button>
+  </div>
+</div>
+
+<!-- WORKSPACE TAB -->
+<div class="workspace" id="view-workspace">
+
+  <div class="editor-panel">
+    <div class="panel-header">
+      <div class="panel-header-dot" style="background:#e2884a"></div>
+      Block Workspace — drag blocks to build
+    </div>
+    <div id="blocklyDiv"></div>
+  </div>
+
+  <div class="divider" id="divider"></div>
+
+  <div class="code-panel" id="codePanel">
+    <div class="code-header">
+      <div class="code-lang">
+        <div class="live-dot"></div>
+        Live Skript Output
+      </div>
+      <div class="code-actions">
+        <button class="btn btn-ghost" onclick="downloadSk()" style="font-size:11px;padding:3px 10px;">⬇ .sk</button>
+        <button class="btn btn-ghost" onclick="wrapCode()" style="font-size:11px;padding:3px 10px;" id="wrapBtn">↵ Wrap</button>
+      </div>
+    </div>
+    <div id="codeArea">
+      <div class="empty-state">
+        <div class="icon">🧱</div>
+        <p>Drag an Event block onto the canvas<br>to start generating Skript code.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LIBRARY TAB -->
+<div class="workspace" id="view-library" style="display:none; flex-direction:column; overflow-y:auto; padding:24px;">
+  <div style="max-width:820px; margin:0 auto; width:100%;">
+    <h2 style="font-size:18px;font-weight:700;margin-bottom:6px;">Script Library</h2>
+    <p style="color:var(--text2);font-size:13px;margin-bottom:20px;">Your saved scripts. Click a script to load it into the workspace.</p>
+    <div class="script-list" id="libraryList">
+      <p style="color:var(--text3);font-size:13px;">No saved scripts yet. Build something and hit Save!</p>
+    </div>
+  </div>
+</div>
+
+<!-- REFERENCE TAB -->
+<div class="workspace" id="view-help" style="display:none; flex-direction:column; overflow-y:auto; padding:24px;">
+  <div style="max-width:820px; margin:0 auto; width:100%;" id="refContent"></div>
+</div>
+
+<!-- STATUSBAR -->
+<div class="statusbar">
+  <div class="status-item">Blocks: <span id="statBlocks">0</span></div>
+  <div class="status-item">Lines: <span id="statLines">0</span></div>
+  <div class="status-item">Events: <span id="statEvents">0</span></div>
+  <div class="status-item" style="margin-left:auto">SkriptForge v2.0 · MC 26.1.X · Skript 2.9</div>
+</div>
+
+<!-- SAVE MODAL -->
+<div class="modal-backdrop" id="saveModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>💾 Save Script</h3>
+      <button class="modal-close" onclick="closeModal('saveModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="input-group">
+        <label>Script Name</label>
+        <input type="text" id="saveName" placeholder="e.g. welcome_system" />
+      </div>
+      <div class="input-group">
+        <label>Description</label>
+        <input type="text" id="saveDesc" placeholder="What does this script do?" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('saveModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveScript()">Save Script</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOAD MODAL -->
+<div class="modal-backdrop" id="loadModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>📂 Load Script</h3>
+      <button class="modal-close" onclick="closeModal('loadModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="script-list" id="loadList">
+        <p style="color:var(--text3);font-size:13px;">No saved scripts found.</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('loadModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<xml id="toolbox" style="display:none">
+  <category name="Events" colour="#e2884a">
+    <label text="— Player Events —"></label>
+    <block type="sk_on_join"></block>
+    <block type="sk_on_quit"></block>
+    <block type="sk_on_chat"></block>
+    <block type="sk_on_command"></block>
+    <block type="sk_on_death"></block>
+    <block type="sk_on_respawn"></block>
+    <block type="sk_on_damage"></block>
+    <block type="sk_on_heal"></block>
+    <block type="sk_on_level_change"></block>
+    <block type="sk_on_food_change"></block>
+    <block type="sk_on_move"></block>
+    <block type="sk_on_sneak"></block>
+    <block type="sk_on_sprint"></block>
+    <block type="sk_on_toggle_flight"></block>
+    <block type="sk_on_bed_enter"></block>
+    <block type="sk_on_bed_leave"></block>
+    <label text="— Block Events —"></label>
+    <block type="sk_on_break"></block>
+    <block type="sk_on_place"></block>
+    <block type="sk_on_right_click_block"></block>
+    <block type="sk_on_left_click_block"></block>
+    <block type="sk_on_sign_change"></block>
+    <label text="— World Events —"></label>
+    <block type="sk_on_weather_change"></block>
+    <block type="sk_on_lightning"></block>
+    <block type="sk_on_time_change"></block>
+    <label text="— Item Events —"></label>
+    <block type="sk_on_item_drop"></block>
+    <block type="sk_on_item_pickup"></block>
+    <block type="sk_on_item_damage"></block>
+    <block type="sk_on_consume"></block>
+    <block type="sk_on_craft"></block>
+    <block type="sk_on_enchant"></block>
+    <label text="— Inventory Events —"></label>
+    <block type="sk_on_inventory_open"></block>
+    <block type="sk_on_inventory_close"></block>
+    <block type="sk_on_inventory_click"></block>
+    <label text="— Entity Events —"></label>
+    <block type="sk_on_entity_spawn"></block>
+    <block type="sk_on_entity_death"></block>
+    <block type="sk_on_projectile_hit"></block>
+    <block type="sk_on_projectile_launch"></block>
+    <label text="— Server Events —"></label>
+    <block type="sk_on_server_start"></block>
+    <block type="sk_on_server_stop"></block>
+    <block type="sk_every_x_seconds"></block>
+  </category>
+
+  <category name="Conditions" colour="#5fa8e8">
+    <label text="— Player Conditions —"></label>
+    <block type="sk_if_permission"></block>
+    <block type="sk_if_gamemode"></block>
+    <block type="sk_if_world"></block>
+    <block type="sk_if_health_below"></block>
+    <block type="sk_if_health_above"></block>
+    <block type="sk_if_food_below"></block>
+    <block type="sk_if_online"></block>
+    <block type="sk_if_op"></block>
+    <block type="sk_if_sneaking"></block>
+    <block type="sk_if_flying"></block>
+    <block type="sk_if_sprinting"></block>
+    <block type="sk_if_on_ground"></block>
+    <block type="sk_if_in_vehicle"></block>
+    <label text="— Block Conditions —"></label>
+    <block type="sk_if_block_is"></block>
+    <block type="sk_if_block_not"></block>
+    <label text="— Item Conditions —"></label>
+    <block type="sk_if_holding"></block>
+    <block type="sk_if_has_item"></block>
+    <label text="— Variable Conditions —"></label>
+    <block type="sk_if_var_equals"></block>
+    <block type="sk_if_var_greater"></block>
+    <block type="sk_if_var_less"></block>
+    <block type="sk_if_var_set"></block>
+    <label text="— Logic —"></label>
+    <block type="sk_else"></block>
+    <block type="sk_else_if_permission"></block>
+  </category>
+
+  <category name="Messages" colour="#98c379">
+    <block type="sk_send_message"></block>
+    <block type="sk_send_title"></block>
+    <block type="sk_send_subtitle"></block>
+    <block type="sk_send_actionbar"></block>
+    <block type="sk_broadcast"></block>
+    <block type="sk_broadcast_world"></block>
+    <block type="sk_send_to_player"></block>
+    <block type="sk_send_console"></block>
+  </category>
+
+  <category name="Player Actions" colour="#a8d08a">
+    <label text="— Game State —"></label>
+    <block type="sk_set_gamemode"></block>
+    <block type="sk_set_health"></block>
+    <block type="sk_heal_player"></block>
+    <block type="sk_set_food"></block>
+    <block type="sk_set_xp"></block>
+    <block type="sk_add_xp"></block>
+    <block type="sk_set_level"></block>
+    <block type="sk_set_fly"></block>
+    <block type="sk_set_speed"></block>
+    <label text="— Movement —"></label>
+    <block type="sk_teleport_spawn"></block>
+    <block type="sk_teleport_bed"></block>
+    <block type="sk_teleport_coords"></block>
+    <label text="— Items —"></label>
+    <block type="sk_give_item"></block>
+    <block type="sk_remove_item"></block>
+    <block type="sk_clear_inventory"></block>
+    <block type="sk_drop_item"></block>
+    <label text="— Moderation —"></label>
+    <block type="sk_kick_player"></block>
+    <block type="sk_ban_player"></block>
+    <block type="sk_mute_player"></block>
+    <block type="sk_op_player"></block>
+    <block type="sk_deop_player"></block>
+  </category>
+
+  <category name="Effects" colour="#c678dd">
+    <label text="— Particles —"></label>
+    <block type="sk_spawn_particle"></block>
+    <block type="sk_spawn_particle_circle"></block>
+    <label text="— Sounds —"></label>
+    <block type="sk_play_sound"></block>
+    <block type="sk_play_sound_world"></block>
+    <label text="— Potion Effects —"></label>
+    <block type="sk_apply_effect"></block>
+    <block type="sk_remove_effect"></block>
+    <block type="sk_clear_effects"></block>
+    <label text="— World —"></label>
+    <block type="sk_set_block"></block>
+    <block type="sk_create_explosion"></block>
+    <block type="sk_spawn_lightning"></block>
+    <block type="sk_set_time"></block>
+    <block type="sk_set_weather"></block>
+    <label text="— Entities —"></label>
+    <block type="sk_spawn_mob"></block>
+    <block type="sk_kill_entity"></block>
+    <label text="— Flow —"></label>
+    <block type="sk_run_command"></block>
+    <block type="sk_run_console"></block>
+    <block type="sk_wait"></block>
+    <block type="sk_cancel_event"></block>
+    <block type="sk_stop_script"></block>
+  </category>
+
+  <category name="Variables" colour="#d19a66">
+    <label text="— Set/Get —"></label>
+    <block type="sk_set_var_str"></block>
+    <block type="sk_set_var_num"></block>
+    <block type="sk_set_var_player"></block>
+    <block type="sk_set_global_var"></block>
+    <block type="sk_delete_var"></block>
+    <label text="— Math —"></label>
+    <block type="sk_add_to_var"></block>
+    <block type="sk_subtract_var"></block>
+    <block type="sk_multiply_var"></block>
+    <block type="sk_divide_var"></block>
+    <label text="— Lists —"></label>
+    <block type="sk_add_to_list"></block>
+    <block type="sk_remove_from_list"></block>
+    <block type="sk_clear_list"></block>
+    <block type="sk_loop_list"></block>
+  </category>
+
+  <category name="Control Flow" colour="#56b6c2">
+    <block type="sk_loop_players"></block>
+    <block type="sk_loop_times"></block>
+    <block type="sk_loop_entities"></block>
+    <block type="sk_while_var"></block>
+    <block type="sk_break_loop"></block>
+    <block type="sk_continue_loop"></block>
+    <block type="sk_async_effect"></block>
+  </category>
+
+  <category name="Functions" colour="#e06c75">
+    <block type="sk_function_def"></block>
+    <block type="sk_function_call"></block>
+    <block type="sk_function_return"></block>
+  </category>
+</xml>
+
+<script src="/scripts/blocks.js"></script>
+<script src="/scripts/compiler.js"></script>
+<script src="/scripts/app.js"></script>
+</body>
+</html>
