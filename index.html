@@ -5,677 +5,790 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SkriptForge</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/blockly/blockly_compressed.js"></script>
 <script src="https://unpkg.com/blockly/blocks_compressed.js"></script>
 <script src="https://unpkg.com/blockly/msg/en.js"></script>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
-:root {
-  /* MC palette */
-  --dirt:    #8B6914;
-  --dirt2:   #6B4F10;
-  --grass:   #5A8C2C;
-  --grass2:  #4a7522;
-  --stone:   #7a7a7a;
-  --stone2:  #5a5a5a;
-  --wood:    #9c7a3c;
-  --coal:    #2a2a2a;
-  --sky:     #1a2a3a;
-  --sky2:    #0e1820;
-  --gold:    #e8b830;
-  --gold2:   #c89820;
-  --diamond: #4de8e8;
-  --red:     #cc3333;
-  --green:   #44aa22;
-  --green2:  #55cc33;
-  --purple:  #884dcc;
-  --teal:    #2abcbc;
-  --orange:  #e07722;
-  --text:    #f0f0e0;
-  --text2:   #b8b8a0;
-  --text3:   #666655;
-  --border-w: 3px;
+:root{
+  --dirt:#7a5c10;--dirt2:#5a420c;--dirt3:#4a3608;
+  --grass:#4a7a1e;--grass2:#5a9a26;--grass3:#3a5e18;
+  --stone:#606060;--stone2:#484848;--stone3:#383838;
+  --coal:#1a1a1a;--sky:#0e1420;--sky2:#080e18;
+  --gold:#d4a820;--gold2:#f0c030;
+  --diamond:#30d0d0;--diamond2:#50e8e8;
+  --green:#44aa22;--green2:#55cc33;
+  --red:#cc2222;--red2:#ee4444;
+  --teal:#20aaaa;--teal2:#30cccc;
+  --orange:#cc6620;--orange2:#ee8833;
+  --purple:#882acc;--purple2:#aa44ee;
+  --blue:#2266cc;--blue2:#3388ee;
+  --text:#e8e0c0;--text2:#a89870;--text3:#5a5030;
+  --border-px:3px;
 }
 
-html, body {
-  height: 100%;
-  overflow: hidden;
-  background: var(--sky2);
-  color: var(--text);
-  font-family: 'Press Start 2P', monospace;
-  image-rendering: pixelated;
-}
+html,body{height:100%;overflow:hidden;background:var(--sky2);color:var(--text);font-family:'Press Start 2P',monospace}
 
-/* ── PIXEL BORDER MIXIN ── */
-.px-box {
-  border: var(--border-w) solid #000;
-  box-shadow:
-    inset var(--border-w) var(--border-w) 0 rgba(255,255,255,0.25),
-    inset calc(-1 * var(--border-w)) calc(-1 * var(--border-w)) 0 rgba(0,0,0,0.4);
-}
+/* ── PIXEL HELPERS ── */
+.px{border:var(--border-px) solid #000;box-shadow:inset 2px 2px 0 rgba(255,255,255,.18),inset -2px -2px 0 rgba(0,0,0,.4)}
+.px-in{border:var(--border-px) solid #000;box-shadow:inset 2px 2px 0 rgba(0,0,0,.45),inset -2px -2px 0 rgba(255,255,255,.08)}
 
-.px-box-inset {
-  border: var(--border-w) solid #000;
-  box-shadow:
-    inset var(--border-w) var(--border-w) 0 rgba(0,0,0,0.4),
-    inset calc(-1 * var(--border-w)) calc(-1 * var(--border-w)) 0 rgba(255,255,255,0.1);
-}
-
-/* ── DIRT TEXTURE (CSS pattern) ── */
-.dirt-bg {
-  background-color: var(--dirt);
+/* ── TEXTURES ── */
+.dirt-tex{
+  background-color:var(--dirt2);
   background-image:
-    repeating-linear-gradient(0deg, transparent, transparent 7px, rgba(0,0,0,0.08) 7px, rgba(0,0,0,0.08) 8px),
-    repeating-linear-gradient(90deg, transparent, transparent 7px, rgba(0,0,0,0.06) 7px, rgba(0,0,0,0.06) 8px),
-    radial-gradient(circle at 15% 20%, rgba(0,0,0,0.12) 2px, transparent 2px),
-    radial-gradient(circle at 55% 70%, rgba(0,0,0,0.10) 2px, transparent 2px),
-    radial-gradient(circle at 80% 35%, rgba(0,0,0,0.08) 2px, transparent 2px),
-    radial-gradient(circle at 30% 80%, rgba(255,255,255,0.04) 2px, transparent 2px);
+    repeating-linear-gradient(0deg,transparent,transparent 7px,rgba(0,0,0,.09) 7px,rgba(0,0,0,.09) 8px),
+    repeating-linear-gradient(90deg,transparent,transparent 7px,rgba(0,0,0,.06) 7px,rgba(0,0,0,.06) 8px),
+    radial-gradient(circle at 12% 22%,rgba(0,0,0,.13) 2px,transparent 2px),
+    radial-gradient(circle at 58% 68%,rgba(0,0,0,.10) 2px,transparent 2px),
+    radial-gradient(circle at 82% 38%,rgba(255,255,255,.04) 2px,transparent 2px)
 }
-
-.stone-bg {
-  background-color: var(--stone2);
+.stone-tex{
+  background-color:var(--stone2);
   background-image:
-    repeating-linear-gradient(0deg, transparent, transparent 15px, rgba(0,0,0,0.06) 15px, rgba(0,0,0,0.06) 16px),
-    repeating-linear-gradient(90deg, transparent, transparent 15px, rgba(0,0,0,0.04) 15px, rgba(0,0,0,0.04) 16px);
+    repeating-linear-gradient(0deg,transparent,transparent 14px,rgba(0,0,0,.07) 14px,rgba(0,0,0,.07) 15px),
+    repeating-linear-gradient(90deg,transparent,transparent 14px,rgba(0,0,0,.05) 14px,rgba(0,0,0,.05) 15px)
 }
-
-.coal-bg {
-  background-color: #1e1e1e;
+.coal-tex{
+  background-color:#181410;
+  background-image:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(255,255,255,.018) 3px,rgba(255,255,255,.018) 4px)
+}
+.wood-tex{
+  background-color:#5a3e14;
   background-image:
-    repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,255,255,0.02) 3px, rgba(255,255,255,0.02) 4px);
+    repeating-linear-gradient(90deg,transparent,transparent 18px,rgba(0,0,0,.12) 18px,rgba(0,0,0,.12) 19px),
+    repeating-linear-gradient(5deg,transparent,transparent 40px,rgba(255,255,255,.04) 40px,rgba(255,255,255,.04) 41px)
 }
 
 /* ── LAYOUT ── */
-body { display: flex; flex-direction: column; }
+body{display:flex;flex-direction:column}
 
 /* ── TOPBAR ── */
-.topbar {
-  height: 52px;
-  display: flex;
-  align-items: center;
-  padding: 0 12px;
-  gap: 10px;
-  flex-shrink: 0;
-  border-bottom: var(--border-w) solid #000;
-  position: relative;
-  z-index: 10;
-  background-color: var(--grass2);
-  background-image:
-    repeating-linear-gradient(90deg, transparent, transparent 15px, rgba(0,0,0,0.1) 15px, rgba(0,0,0,0.1) 16px),
-    linear-gradient(180deg, rgba(255,255,255,0.08) 0%, transparent 100%);
-  box-shadow: 0 var(--border-w) 0 #000, inset 0 var(--border-w) 0 rgba(255,255,255,0.2);
+.topbar{
+  height:52px;display:flex;align-items:center;padding:0 12px;gap:8px;flex-shrink:0;
+  border-bottom:var(--border-px) solid #000;z-index:20;
+  box-shadow:0 var(--border-px) 0 #000,inset 0 var(--border-px) 0 rgba(255,255,255,.15)
 }
-
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  text-shadow: 2px 2px 0 #000, -1px -1px 0 #000;
-  white-space: nowrap;
+.logo{display:flex;align-items:center;gap:8px;margin-right:6px}
+.logo-box{
+  width:36px;height:36px;background:var(--grass);border:3px solid #000;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+  box-shadow:inset 2px 2px 0 rgba(255,255,255,.25),inset -2px -2px 0 rgba(0,0,0,.4)
 }
+.logo-text{font-size:10px;color:#fff;text-shadow:2px 2px 0 #000}
+.logo-sub{font-size:6px;color:var(--gold2);display:block;margin-top:3px;letter-spacing:1px}
 
-.logo-icon {
-  width: 36px; height: 36px;
-  background-color: var(--grass);
-  border: 3px solid #000;
-  box-shadow: inset 2px 2px 0 rgba(255,255,255,0.3), inset -2px -2px 0 rgba(0,0,0,0.4);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 20px;
-  image-rendering: pixelated;
-  flex-shrink: 0;
+/* ── TABS ── */
+.tabs{display:flex;gap:4px;margin-right:auto}
+.tab-btn{
+  font-family:'Press Start 2P',monospace;font-size:7px;
+  padding:6px 14px;border:3px solid #000;cursor:pointer;
+  text-shadow:1px 1px 0 #000;letter-spacing:.5px;
+  box-shadow:inset 1px 1px 0 rgba(255,255,255,.15),inset -1px -1px 0 rgba(0,0,0,.3),2px 2px 0 rgba(0,0,0,.4);
+  transition:filter .1s;background:var(--stone);color:var(--text2);position:relative;top:0
 }
-
-.logo-text { font-size: 11px; color: #fff; letter-spacing: 1px; }
-.logo-sub  { font-size: 6px; color: var(--gold); display: block; margin-top: 3px; letter-spacing: 2px; }
-
-.topbar-sep { width: 3px; height: 32px; background: #000; margin: 0 2px; flex-shrink: 0; }
-
-.mc-badge {
-  font-size: 6px;
-  padding: 4px 8px;
-  border: 2px solid #000;
-  box-shadow: inset 1px 1px 0 rgba(255,255,255,0.2), inset -1px -1px 0 rgba(0,0,0,0.3);
-  text-shadow: 1px 1px 0 #000;
-  white-space: nowrap;
-}
-.badge-g { background: var(--grass); color: #fff; }
-.badge-d { background: #1a3a3a; color: var(--diamond); }
-
-.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.tab-btn:active{top:1px;box-shadow:inset 1px 1px 0 rgba(0,0,0,.3),1px 1px 0 rgba(0,0,0,.4)}
+.tab-btn:hover{filter:brightness(1.2)}
+.tab-btn.active{background:var(--grass3);color:#fff;box-shadow:inset 2px 2px 0 rgba(0,0,0,.3),1px 1px 0 rgba(0,0,0,.4)}
 
 /* ── MC BUTTONS ── */
-.mc-btn {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 7px;
-  padding: 7px 12px;
-  border: 3px solid #000;
-  cursor: pointer;
-  text-shadow: 2px 2px 0 #000;
-  letter-spacing: 0.5px;
-  transition: filter .1s;
-  box-shadow: inset 2px 2px 0 rgba(255,255,255,0.2), inset -2px -2px 0 rgba(0,0,0,0.35), 2px 2px 0 rgba(0,0,0,0.5);
-  position: relative;
-  top: 0;
+.mc-btn{
+  font-family:'Press Start 2P',monospace;font-size:7px;
+  padding:6px 12px;border:3px solid #000;cursor:pointer;
+  text-shadow:1px 1px 0 #000;letter-spacing:.3px;
+  box-shadow:inset 2px 2px 0 rgba(255,255,255,.18),inset -2px -2px 0 rgba(0,0,0,.35),2px 2px 0 rgba(0,0,0,.5);
+  transition:filter .1s;position:relative;top:0;white-space:nowrap
 }
-.mc-btn:active {
-  box-shadow: inset 2px 2px 0 rgba(0,0,0,0.35), inset -2px -2px 0 rgba(255,255,255,0.1), 1px 1px 0 rgba(0,0,0,0.5);
-  top: 1px;
+.mc-btn:active{top:1px;box-shadow:inset 1px 1px 0 rgba(0,0,0,.3),1px 1px 0 rgba(0,0,0,.4)}
+.mc-btn:hover{filter:brightness(1.15)}
+.btn-stone {background:var(--stone); color:var(--text)}
+.btn-green {background:var(--grass); color:#fff}
+.btn-gold  {background:var(--gold);  color:#fff}
+.btn-red   {background:var(--red);   color:#fff}
+.btn-teal  {background:var(--teal);  color:#fff}
+.btn-redx  {background:#3a1010;color:var(--red2);border-color:#000;font-size:6px;padding:4px 8px}
+.btn-err   {background:#7a1010!important;color:#ffaaaa!important}
+
+.mc-badge{
+  font-size:6px;padding:3px 8px;border:2px solid #000;
+  box-shadow:inset 1px 1px 0 rgba(255,255,255,.12),inset -1px -1px 0 rgba(0,0,0,.25);
+  text-shadow:1px 1px 0 #000;white-space:nowrap
+}
+.badge-g{background:#2a5010;color:var(--green2)}
+.badge-d{background:#103030;color:var(--diamond2)}
+
+/* ── MAIN CONTENT ── */
+.main{display:flex;flex:1;overflow:hidden;height:calc(100vh - 52px - 26px)}
+.tab-view{display:none;flex:1;overflow:hidden}
+.tab-view.flex-col{flex-direction:column}
+
+/* ── EDITOR TAB ── */
+#view-editor{display:flex}
+
+/* ── PASTE PANEL ── */
+.paste-panel{
+  width:260px;min-width:160px;display:flex;flex-direction:column;flex-shrink:0;
+  border-right:var(--border-px) solid #000;overflow:hidden
+}
+.panel-hdr{
+  height:34px;padding:0 10px;border-bottom:3px solid #000;
+  display:flex;align-items:center;gap:8px;flex-shrink:0;
+  font-size:7px;text-shadow:1px 1px 0 #000;letter-spacing:.3px
+}
+.panel-hdr .dot{width:10px;height:10px;border:2px solid #000;flex-shrink:0;box-shadow:inset 1px 1px 0 rgba(255,255,255,.2)}
+.paste-body{flex:1;display:flex;flex-direction:column;padding:8px;gap:7px;overflow:hidden}
+#pasteInput{
+  flex:1;resize:none;font-family:'VT323',monospace;font-size:15px;line-height:1.5;
+  padding:8px 10px;outline:none;color:#90ff90;caret-color:var(--green2);tab-size:4;overflow:auto
+}
+#pasteInput::placeholder{color:#2a5a2a;font-size:14px}
+#pasteInput:focus{box-shadow:inset 2px 2px 0 rgba(0,0,0,.5),0 0 0 2px var(--green2)!important}
+.paste-btns{display:flex;gap:6px;flex-shrink:0}
+.paste-btns .mc-btn{flex:1;text-align:center;font-size:6px}
+#parseStatus{font-family:'VT323',monospace;font-size:14px;min-height:18px;text-shadow:1px 1px 0 #000;flex-shrink:0}
+.status-ok {color:var(--green2)}
+.status-err{color:#ff6666}
+.status-warn{color:var(--gold2)}
+#unknownDetails{
+  font-family:'VT323',monospace;font-size:13px;color:var(--text3);
+  white-space:pre;display:none;max-height:60px;overflow-y:auto;padding:4px 6px;
+  background:#100e08;border:2px solid #000
 }
 
-.btn-stone  { background: var(--stone); color: #fff; }
-.btn-stone:hover  { filter: brightness(1.15); }
-.btn-green  { background: var(--grass); color: #fff; }
-.btn-green:hover  { filter: brightness(1.15); }
-.btn-gold   { background: var(--gold2); color: #fff; }
-.btn-gold:hover   { filter: brightness(1.15); }
-.btn-red    { background: var(--red); color: #fff; }
-.btn-red:hover    { filter: brightness(1.15); }
-.btn-diamond { background: #1a4a4a; color: var(--diamond); }
-.btn-diamond:hover { filter: brightness(1.2); }
-.btn-err    { background: #8a1a1a !important; color: #ffaaaa !important; }
-
-/* ── MAIN LAYOUT ── */
-.main {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-  height: calc(100vh - 52px - 28px);
-}
-
-/* ── LEFT: PASTE AREA ── */
-.paste-panel {
-  width: 280px;
-  min-width: 200px;
-  max-width: 380px;
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  border-right: var(--border-w) solid #000;
-  overflow: hidden;
-}
-
-.panel-header {
-  padding: 8px 12px;
-  border-bottom: 3px solid #000;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  font-size: 7px;
-  text-shadow: 1px 1px 0 #000;
-  letter-spacing: 0.5px;
-}
-.panel-header .dot {
-  width: 10px; height: 10px;
-  border: 2px solid #000;
-  flex-shrink: 0;
-  box-shadow: inset 1px 1px 0 rgba(255,255,255,0.3);
-}
-
-.paste-area-wrap {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 10px;
-  gap: 8px;
-  overflow: hidden;
-}
-
-#pasteInput {
-  flex: 1;
-  resize: none;
-  font-family: 'VT323', monospace;
-  font-size: 16px;
-  line-height: 1.5;
-  padding: 10px;
-  outline: none;
-  color: #b0ffb0;
-  border: 3px solid #000;
-  box-shadow: inset 2px 2px 0 rgba(0,0,0,0.5), inset -1px -1px 0 rgba(255,255,255,0.05);
-  caret-color: var(--green2);
-  tab-size: 4;
-  overflow: auto;
-}
-#pasteInput::placeholder { color: #336633; font-family: 'VT323', monospace; font-size: 15px; }
-#pasteInput:focus { box-shadow: inset 2px 2px 0 rgba(0,0,0,0.5), 0 0 0 2px var(--green); }
-
-.paste-btn-row { display: flex; gap: 8px; flex-shrink: 0; }
-.paste-btn-row .mc-btn { flex: 1; text-align: center; font-size: 6px; }
-
-#parseStatus {
-  font-family: 'VT323', monospace;
-  font-size: 15px;
-  min-height: 20px;
-  text-shadow: 1px 1px 0 #000;
-  flex-shrink: 0;
-}
-.status-ok  { color: var(--green2); }
-.status-err { color: #ff6666; }
-.status-warn{ color: var(--gold); }
-
-/* ── DIVIDER ── */
-.divider {
-  width: 6px;
-  background: #000;
-  cursor: col-resize;
-  flex-shrink: 0;
-  position: relative;
-}
-.divider::after {
-  content: '⋮';
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%,-50%);
-  color: var(--stone);
-  font-size: 18px;
-  letter-spacing: -2px;
-  pointer-events: none;
-}
-.divider:hover { background: var(--grass); }
-.divider.dragging { background: var(--grass); }
+/* ── DIVIDERS ── */
+.divider{width:5px;background:#000;cursor:col-resize;flex-shrink:0;position:relative}
+.divider::after{content:'⋮';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:var(--stone);font-size:16px;letter-spacing:-3px;pointer-events:none}
+.divider:hover,.divider.dragging{background:var(--grass2)}
 
 /* ── BLOCKLY PANEL ── */
-.editor-panel {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-width: 200px;
-}
-
-#blocklyDiv { flex: 1; overflow: hidden; }
-
-/* ── DIVIDER 2 ── */
-.divider2 {
-  width: 6px;
-  background: #000;
-  cursor: col-resize;
-  flex-shrink: 0;
-}
-.divider2:hover, .divider2.dragging { background: var(--grass); }
+.editor-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:200px}
+#blocklyDiv{flex:1;overflow:hidden}
 
 /* ── CODE PANEL ── */
-.code-panel {
-  width: 38%;
-  min-width: 220px;
-  max-width: 65%;
-  display: flex;
-  flex-direction: column;
-  border-left: var(--border-w) solid #000;
-  overflow: hidden;
+.code-panel{
+  width:32%;min-width:200px;max-width:60%;
+  display:flex;flex-direction:column;border-left:var(--border-px) solid #000;overflow:hidden
 }
-
-.code-header {
-  height: 36px;
-  border-bottom: 3px solid #000;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 10px;
-  flex-shrink: 0;
+.code-hdr{
+  height:34px;border-bottom:3px solid #000;display:flex;align-items:center;
+  justify-content:space-between;padding:0 10px;flex-shrink:0
 }
-.code-title {
-  font-size: 7px;
-  text-shadow: 1px 1px 0 #000;
-  display: flex; align-items: center; gap: 8px;
-}
-.live-dot {
-  width: 8px; height: 8px;
-  background: var(--green2);
-  border: 2px solid #000;
-  animation: blink 1.2s steps(1) infinite;
-}
-@keyframes blink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
-
-.code-btns { display: flex; gap: 6px; }
-
-#codeArea {
-  flex: 1;
-  overflow: auto;
-  padding: 12px 0;
-  font-family: 'VT323', monospace;
-  font-size: 16px;
-  line-height: 1.6;
-}
-
-.sk-code { display: block; white-space: pre; }
-.sk-code span { display: block; padding: 0 12px; }
-
-.ln {
-  display: inline-block !important;
-  width: 2.6em;
-  padding: 0 !important;
-  text-align: right;
-  margin-right: 14px;
-  color: var(--stone);
-  user-select: none;
-  font-size: 14px;
-}
-
-/* code colors — MC flavored */
-.sk-comment { color: #445544; }
-.sk-event   { color: var(--gold); }
-.sk-cond    { color: var(--diamond); }
-.sk-loop    { color: var(--teal); }
-.sk-var     { color: var(--orange); }
-.sk-msg     { color: #88ff88; }
-.sk-eff     { color: var(--purple); }
-.sk-act     { color: #aaffaa; }
-.sk-plain   { color: var(--text2); }
-.sk-blank   { color: transparent; }
-
-.empty-state {
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  height: 100%; gap: 16px;
-  text-align: center; padding: 24px; user-select: none;
-}
-.es-icon { font-size: 48px; opacity: .3; }
-.empty-state p {
-  font-family: 'VT323', monospace;
-  font-size: 18px; color: var(--stone); line-height: 1.6;
-}
+.code-title{font-size:7px;text-shadow:1px 1px 0 #000;display:flex;align-items:center;gap:8px}
+.live-dot{width:7px;height:7px;background:var(--green2);border:2px solid #000;animation:blink 1s steps(1) infinite}
+@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+#codeArea{flex:1;overflow:auto;padding:10px 0;font-family:'VT323',monospace;font-size:16px;line-height:1.65}
+.sk-code{display:block;white-space:pre}
+.sk-code span{display:block;padding:0 10px}
+.ln{display:inline-block!important;width:2.5em;padding:0!important;text-align:right;margin-right:12px;color:var(--stone);user-select:none;font-size:13px}
+.sk-comment{color:#3a4a3a}
+.sk-event  {color:var(--gold2);font-weight:700}
+.sk-cond   {color:var(--diamond2)}
+.sk-loop   {color:var(--teal2)}
+.sk-func   {color:var(--red2)}
+.sk-var    {color:var(--orange2)}
+.sk-msg    {color:#88ff88}
+.sk-eff    {color:var(--purple2)}
+.sk-act    {color:#aaff99}
+.sk-plain  {color:var(--text2)}
+.sk-blank  {color:transparent}
 
 /* ── DIAG PANEL ── */
-#diagPanel {
-  flex-shrink: 0;
-  border-top: 3px solid #000;
-  max-height: 180px;
-  overflow-y: auto;
-  font-family: 'VT323', monospace;
-  font-size: 15px;
-}
-.diag-item {
-  padding: 7px 12px;
-  border-bottom: 2px solid #000;
-  cursor: pointer;
-}
-.diag-item:hover { filter: brightness(1.2); }
-.diag-error { background: #2a0808; }
-.diag-warn  { background: #2a1e00; }
-.diag-head  { font-weight: bold; margin-bottom: 2px; }
-.diag-error .diag-head { color: #ff6666; }
-.diag-warn  .diag-head { color: var(--gold); }
-.diag-msg   { color: var(--text); }
-.diag-fix   { color: #88ff88; font-size: 13px; margin-top: 2px; }
+#diagPanel{flex-shrink:0;border-top:3px solid #000;max-height:170px;overflow-y:auto;font-family:'VT323',monospace;font-size:14px}
+.diag-item{padding:6px 10px;border-bottom:2px solid #000;cursor:pointer}
+.diag-item:hover{filter:brightness(1.2)}
+.diag-error{background:#220808}
+.diag-warn {background:#1e1800}
+.diag-head {font-weight:700;margin-bottom:2px;display:flex;align-items:center;gap:8px}
+.diag-error .diag-head{color:#ff6666}
+.diag-warn  .diag-head{color:var(--gold2)}
+.diag-hint {font-size:11px;font-weight:400;color:var(--text3)}
+.diag-msg  {color:var(--text);margin-bottom:2px}
+.diag-fix  {color:#88ff88;font-size:12px}
+
+/* ── EMPTY STATE ── */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:14px;text-align:center;padding:24px;user-select:none;color:var(--stone)}
+.es-icon{font-size:40px;opacity:.25}
+.empty-state p{font-family:'VT323',monospace;font-size:17px;line-height:1.6}
 
 /* ── STATUSBAR ── */
-.statusbar {
-  height: 28px;
-  display: flex;
-  align-items: center;
-  padding: 0 12px;
-  gap: 20px;
-  flex-shrink: 0;
-  border-top: 3px solid #000;
-  font-size: 6px;
-  text-shadow: 1px 1px 0 #000;
-  background-color: var(--dirt2);
-  background-image:
-    repeating-linear-gradient(90deg, transparent, transparent 8px, rgba(0,0,0,0.1) 8px, rgba(0,0,0,0.1) 9px);
+.statusbar{
+  height:26px;display:flex;align-items:center;padding:0 12px;gap:18px;
+  flex-shrink:0;border-top:3px solid #000;font-size:6px;text-shadow:1px 1px 0 #000;
+  background-color:var(--dirt3);
+  background-image:repeating-linear-gradient(90deg,transparent,transparent 8px,rgba(0,0,0,.1) 8px,rgba(0,0,0,.1) 9px)
 }
-.stat { display: flex; align-items: center; gap: 6px; color: var(--text2); }
-.stat span { color: var(--gold); }
-.stat-right { margin-left: auto; color: var(--stone); }
+.stat{display:flex;align-items:center;gap:5px;color:var(--text2)}
+.stat span{color:var(--gold2)}
+.stat-right{margin-left:auto;color:var(--text3)}
+
+/* ── PUBLISH TAB ── */
+#view-publish{flex-direction:row;gap:0;overflow:hidden}
+.pub-form-col{
+  width:320px;min-width:240px;flex-shrink:0;display:flex;flex-direction:column;
+  border-right:var(--border-px) solid #000;overflow-y:auto
+}
+.pub-list-col{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.pub-inner{padding:14px;display:flex;flex-direction:column;gap:10px}
+.pub-section-title{font-size:8px;color:var(--gold2);text-shadow:1px 1px 0 #000;margin-bottom:4px;border-bottom:2px solid var(--dirt);padding-bottom:6px}
+.pub-field label{display:block;font-size:6px;color:var(--text2);margin-bottom:5px;letter-spacing:.5px;text-shadow:1px 1px 0 #000}
+.pub-field input,.pub-field textarea{
+  width:100%;font-family:'VT323',monospace;font-size:15px;padding:6px 10px;
+  color:#90ff90;background:#100e08;border:3px solid #000;outline:none;
+  box-shadow:inset 2px 2px 0 rgba(0,0,0,.45),inset -1px -1px 0 rgba(255,255,255,.05)
+}
+.pub-field input:focus,.pub-field textarea:focus{box-shadow:inset 2px 2px 0 rgba(0,0,0,.5),0 0 0 2px var(--green2)!important}
+.pub-field textarea{resize:vertical;min-height:200px;font-size:14px}
+#pubError{font-family:'VT323',monospace;font-size:14px;color:#ff6666;min-height:16px}
+.pub-list-hdr{height:34px;border-bottom:3px solid #000;display:flex;align-items:center;padding:0 12px;gap:8px;flex-shrink:0;font-size:7px;text-shadow:1px 1px 0 #000}
+#publishedList{flex:1;overflow-y:auto;padding:10px}
+.pub-card{
+  background:#1a1508;border:3px solid #000;margin-bottom:10px;
+  box-shadow:3px 3px 0 rgba(0,0,0,.5)
+}
+.pub-header{padding:8px 12px;border-bottom:2px solid #000;display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:6px;background:#201a0a}
+.pub-title{font-size:8px;color:var(--gold2);text-shadow:1px 1px 0 #000}
+.pub-meta{font-size:6px;color:var(--text3)}
+.pub-code{
+  font-family:'VT323',monospace;font-size:14px;color:#88cc88;
+  padding:8px 12px;max-height:140px;overflow-y:auto;white-space:pre;
+  border-bottom:2px solid #000
+}
+.pub-actions{padding:8px 10px;display:flex;gap:7px;flex-wrap:wrap;background:#100e08}
+.pub-empty{font-family:'VT323',monospace;font-size:16px;color:var(--stone);text-align:center;padding:40px 20px;line-height:2}
+
+/* ── DOCS TAB ── */
+#view-docs{align-items:stretch;justify-content:center}
+.docs-frame-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.docs-bar{height:36px;border-bottom:3px solid #000;display:flex;align-items:center;padding:0 12px;gap:10px;flex-shrink:0;font-size:7px}
+.docs-bar a{color:var(--diamond2);text-decoration:none;text-shadow:1px 1px 0 #000}
+.docs-bar a:hover{color:var(--gold2)}
+#docsFrame{flex:1;border:none;background:#fff}
 
 /* ── TOAST ── */
-.toast {
-  position: fixed; bottom: 38px; right: 16px;
-  background: var(--grass);
-  color: #fff;
-  padding: 8px 14px;
-  border: 3px solid #000;
-  font-size: 8px;
-  text-shadow: 1px 1px 0 #000;
-  box-shadow: 4px 4px 0 rgba(0,0,0,0.5);
-  opacity: 0; transform: translateY(8px);
-  transition: all .2s; pointer-events: none; z-index: 9999;
+.toast{
+  position:fixed;bottom:36px;right:16px;
+  background:var(--grass);color:#fff;
+  padding:8px 14px;border:3px solid #000;font-size:8px;
+  text-shadow:1px 1px 0 #000;box-shadow:4px 4px 0 rgba(0,0,0,.6);
+  opacity:0;transform:translateY(8px);transition:all .2s;pointer-events:none;z-index:9999
 }
-.toast.show { opacity: 1; transform: translateY(0); }
+.toast.show{opacity:1;transform:translateY(0)}
 
-/* ── Blockly theming ── */
-.blocklyMainBackground      { stroke: none !important; }
-.blocklyToolboxDiv          { background: #1e1a0e !important; border-right: 3px solid #000 !important; }
-.blocklyFlyoutBackground    { fill: #251f10 !important; fill-opacity: 1 !important; }
-.blocklyTreeLabel           { color: #d4c484 !important; font-family: 'Press Start 2P', monospace !important; font-size: 8px !important; }
-.blocklyTreeRow             { border-radius: 0 !important; margin: 1px 3px !important; }
-.blocklyTreeRow:hover:not(.blocklyTreeSelected) { background: #3a3010 !important; }
-.blocklyTreeSelected        { background: #3a5a10 !important; }
-.blocklyTreeSelected .blocklyTreeLabel { color: var(--green2) !important; }
-.blocklyScrollbarHandle     { fill: #5a4a20 !important; }
-.blocklyText                { font-family: 'Press Start 2P', monospace !important; font-size: 8px !important; }
-.blocklyEditableText rect   { fill: #1a1a0a !important; }
-.blocklyEditableText text   { fill: #d4c484 !important; }
-.blocklyDropdownText        { fill: #d4c484 !important; }
+/* ── Blockly overrides — SYSTEM FONT on block text ── */
+.blocklyMainBackground    {stroke:none!important}
+.blocklyToolboxDiv        {background:#181408!important;border-right:3px solid #000!important}
+.blocklyFlyoutBackground  {fill:#201a0c!important;fill-opacity:1!important}
+.blocklyTreeLabel         {color:#c8b860!important;font-family:system-ui,sans-serif!important;font-size:12px!important;font-weight:600!important}
+.blocklyTreeRow           {border-radius:0!important;margin:1px 3px!important}
+.blocklyTreeRow:hover:not(.blocklyTreeSelected){background:#302810!important}
+.blocklyTreeSelected      {background:#2a4810!important}
+.blocklyTreeSelected .blocklyTreeLabel{color:#88ee44!important}
+.blocklyScrollbarHandle   {fill:#4a3a18!important}
+/* Block text — system font, readable on any colour */
+.blocklyText              {font-family:system-ui,sans-serif!important;font-size:12px!important}
+.blocklyEditableText rect {fill:#100e08!important}
+.blocklyEditableText text {fill:#d8c870!important;font-family:system-ui,sans-serif!important}
+.blocklyDropdownText      {fill:#d8c870!important;font-family:system-ui,sans-serif!important}
+.blocklyFlyoutLabel       {font-family:system-ui,sans-serif!important;font-size:11px!important}
+/* Toolbox category labels */
+.blocklyTreeLabel         {font-family:system-ui,sans-serif!important;font-size:12px!important;font-weight:600!important}
 </style>
 </head>
 <body>
 
-<!-- ── TOPBAR ── -->
-<div class="topbar dirt-bg">
+<!-- ══ TOPBAR ══════════════════════════════════════════════════════════════ -->
+<div class="topbar dirt-tex">
   <div class="logo">
-    <div class="logo-icon">🟩</div>
+    <div class="logo-box">🟩</div>
     <div>
       <div class="logo-text">SkriptForge</div>
-      <span class="logo-sub">MC 26.1.2 · SKRIPT 2.9</span>
+      <span class="logo-sub">MC 26.1.2 · SKRIPT 2.15</span>
     </div>
   </div>
-  <div class="topbar-sep"></div>
-  <span class="mc-badge badge-g">✔ SKRIPT 2.9</span>
-  <span class="mc-badge badge-d">◆ MC 26.1.2</span>
-  <div class="topbar-right">
-    <button class="mc-btn btn-stone" onclick="toggleWrap()" id="btnWrap">↵ WRAP</button>
-    <button class="mc-btn btn-stone" onclick="downloadSk()">⬇ .SK</button>
-    <button class="mc-btn btn-green" id="btnCopy" onclick="copyCode()">📋 COPY</button>
-    <div class="topbar-sep"></div>
-    <button class="mc-btn btn-red" onclick="clearWorkspace()">✕ CLEAR</button>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="editor" onclick="showTab('editor')">⛏ EDITOR</button>
+    <button class="tab-btn" data-tab="publish" onclick="showTab('publish')">📜 PUBLISH</button>
+    <button class="tab-btn" data-tab="docs" onclick="showTab('docs')">📖 DOCS</button>
   </div>
+
+  <span class="mc-badge badge-g">SKRIPT 2.15</span>
+  <span class="mc-badge badge-d">◆ MC 26.1.2</span>
+  <button class="mc-btn btn-green" id="btnCopy" onclick="copyCode()" style="margin-left:4px">📋 COPY .SK</button>
+  <button class="mc-btn btn-red" onclick="clearWorkspace()">✕ CLEAR</button>
 </div>
 
-<!-- ── MAIN ── -->
+<!-- ══ MAIN ════════════════════════════════════════════════════════════════ -->
 <div class="main">
 
-  <!-- LEFT: Paste area -->
-  <div class="paste-panel coal-bg" id="pastePanel">
-    <div class="panel-header dirt-bg">
-      <div class="dot" style="background:var(--diamond)"></div>
-      PASTE .SK CODE
-    </div>
-    <div class="paste-area-wrap">
-      <textarea id="pasteInput" class="coal-bg px-box-inset"
-        placeholder="Paste your .sk code here...&#10;&#10;on join:&#10;    send &quot;&aWelcome!&quot; to player&#10;&#10;Then click IMPORT ↓"
-        spellcheck="false"></textarea>
-      <div id="parseStatus"></div>
-      <div class="paste-btn-row">
-        <button class="mc-btn btn-gold" onclick="parseAndLoad()">▶ IMPORT</button>
-        <button class="mc-btn btn-stone" onclick="clearPaste()">✕ CLEAR</button>
+  <!-- ── EDITOR TAB ─────────────────────────────────────────────────────── -->
+  <div class="tab-view" id="view-editor" style="display:flex">
+
+    <!-- LEFT: Paste panel -->
+    <div class="paste-panel coal-tex" id="pastePanel">
+      <div class="panel-hdr wood-tex">
+        <div class="dot" style="background:var(--diamond)"></div>
+        PASTE .SK CODE
+      </div>
+      <div class="paste-body">
+        <textarea id="pasteInput" class="coal-tex px-in"
+          spellcheck="false"
+          placeholder="Paste your .sk here...&#10;&#10;on join:&#10;    send &quot;&aWelcome!&quot; to player&#10;&#10;Then click IMPORT ↓"></textarea>
+        <div id="parseStatus"></div>
+        <div id="unknownDetails"></div>
+        <div class="paste-btns">
+          <button class="mc-btn btn-gold" onclick="parseAndLoad()">▶ IMPORT</button>
+          <button class="mc-btn btn-stone" onclick="clearPaste()">✕</button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="divider" id="dividerLeft"></div>
+    <div class="divider" id="dividerLeft"></div>
 
-  <!-- MIDDLE: Blockly -->
-  <div class="editor-panel">
-    <div class="panel-header stone-bg">
-      <div class="dot" style="background:var(--orange)"></div>
-      BLOCK WORKSPACE — DRAG BLOCKS TO BUILD
-    </div>
-    <div id="blocklyDiv"></div>
-  </div>
-
-  <div class="divider2" id="dividerRight"></div>
-
-  <!-- RIGHT: Code output -->
-  <div class="code-panel coal-bg" id="codePanel">
-    <div class="code-header stone-bg">
-      <div class="code-title">
-        <div class="live-dot"></div>
-        LIVE OUTPUT
+    <!-- MIDDLE: Blockly workspace -->
+    <div class="editor-panel">
+      <div class="panel-hdr stone-tex">
+        <div class="dot" style="background:var(--orange2)"></div>
+        BLOCK WORKSPACE — DRAG BLOCKS TO BUILD
       </div>
-      <div class="code-btns">
-        <button class="mc-btn btn-stone" style="font-size:6px;padding:5px 8px;" onclick="toggleWrap()">↵</button>
-      </div>
+      <div id="blocklyDiv"></div>
     </div>
-    <div id="codeArea">
-      <div class="empty-state">
-        <div class="es-icon">⛏</div>
-        <p>DRAG AN EVENT BLOCK<br>OR PASTE CODE ON THE LEFT</p>
+
+    <div class="divider" id="dividerRight"></div>
+
+    <!-- RIGHT: Code output -->
+    <div class="code-panel coal-tex" id="codePanel">
+      <div class="code-hdr stone-tex">
+        <div class="code-title"><div class="live-dot"></div> LIVE OUTPUT</div>
+      </div>
+      <div id="codeArea">
+        <div class="empty-state">
+          <div class="es-icon">⛏</div>
+          <p>DRAG AN EVENT BLOCK<br>OR PASTE CODE ON THE LEFT</p>
+        </div>
       </div>
     </div>
-    <!-- diagPanel injected here -->
-  </div>
 
-</div>
+  </div><!-- /view-editor -->
 
-<!-- ── STATUSBAR ── -->
+  <!-- ── PUBLISH TAB ────────────────────────────────────────────────────── -->
+  <div class="tab-view" id="view-publish">
+
+    <!-- Form column -->
+    <div class="pub-form-col coal-tex">
+      <div class="panel-hdr wood-tex">
+        <div class="dot" style="background:var(--gold2)"></div>
+        PUBLISH A SCRIPT
+      </div>
+      <div class="pub-inner">
+        <div class="pub-section-title">SHARE YOUR SCRIPT WITH THE COMMUNITY</div>
+
+        <div class="pub-field">
+          <label>USERNAME</label>
+          <input id="pubUsername" type="text" maxlength="24" placeholder="CoolAdmin123" spellcheck="false">
+        </div>
+        <div class="pub-field">
+          <label>SCRIPT TITLE</label>
+          <input id="pubTitle" type="text" maxlength="60" placeholder="Welcome System v2" spellcheck="false">
+        </div>
+        <div class="pub-field">
+          <label>SKRIPT CODE</label>
+          <textarea id="pubCode" spellcheck="false"
+            placeholder="on join:&#10;    send &quot;&aWelcome!&quot; to player"></textarea>
+        </div>
+        <div id="pubError"></div>
+        <button class="mc-btn btn-green" onclick="publishScript()" style="width:100%;text-align:center">📜 PUBLISH</button>
+
+        <div style="font-family:'VT323',monospace;font-size:13px;color:var(--text3);line-height:1.6;margin-top:4px">
+          • Usernames: letters, numbers, _ and - only<br>
+          • No swearing or slurs in any field<br>
+          • Scripts are stored locally in your browser<br>
+          • Max 20,000 characters per script
+        </div>
+      </div>
+    </div>
+
+    <!-- Published list column -->
+    <div class="pub-list-col coal-tex">
+      <div class="pub-list-hdr stone-tex">
+        <div class="dot" style="background:var(--green2)"></div>
+        COMMUNITY SCRIPTS
+      </div>
+      <div id="publishedList"></div>
+    </div>
+
+  </div><!-- /view-publish -->
+
+  <!-- ── DOCS TAB ───────────────────────────────────────────────────────── -->
+  <div class="tab-view" id="view-docs">
+    <div class="docs-frame-wrap">
+      <div class="docs-bar stone-tex">
+        <span style="color:var(--text2)">EXTERNAL DOCS:</span>
+        <a href="https://skripthub.net/docs/" target="_blank">skripthub.net/docs</a>
+        <span style="color:var(--text3)">·</span>
+        <a href="https://docs.skunity.com/addons/Skript" target="_blank">docs.skunity.com</a>
+        <span style="color:var(--text3)">·</span>
+        <a href="https://github.com/SkriptLang/Skript/releases" target="_blank">GitHub Releases</a>
+        <span style="color:var(--text3);margin-left:auto;font-size:6px">OPENS IN NEW TAB — docs are external sites</span>
+      </div>
+      <!-- Inline quick-reference since external sites block iframes -->
+      <div style="flex:1;overflow-y:auto;padding:18px;font-family:'VT323',monospace;font-size:15px">
+        <div style="max-width:860px;margin:0 auto">
+
+          <div style="font-family:'Press Start 2P',monospace;font-size:10px;color:var(--gold2);margin-bottom:16px;text-shadow:2px 2px 0 #000">
+            QUICK REFERENCE — SKRIPT 2.15 / MC 26.1.2
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+
+            <!-- Color codes -->
+            <div style="background:#1a1508;border:3px solid #000;padding:12px">
+              <div style="font-family:'Press Start 2P',monospace;font-size:7px;color:var(--gold2);margin-bottom:10px">COLOR CODES</div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;font-size:14px">
+                ${[["&0","#000","Black"],["&1","#0000aa","D.Blue"],["&2","#00aa00","D.Green"],
+                   ["&3","#00aaaa","D.Aqua"],["&4","#aa0000","D.Red"],["&5","#aa00aa","Purple"],
+                   ["&6","#ffaa00","Gold"],["&7","#aaaaaa","Gray"],["&8","#555","D.Gray"],
+                   ["&9","#5555ff","Blue"],["&a","#55ff55","Green"],["&b","#55ffff","Aqua"],
+                   ["&c","#ff5555","Red"],["&d","#ff55ff","Pink"],["&e","#ffff55","Yellow"],
+                   ["&f","#fff","White"],["&l","#fff","Bold"],["&o","#aaa","Italic"],
+                   ["&n","#aaa","Under"],["&m","#aaa","Strike"],["&r","#aaa","Reset"]
+                ].map(([c,col,name])=>`<div style="display:flex;align-items:center;gap:5px"><span style="color:${col};font-weight:bold">${c}</span><span style="color:var(--text3)">${name}</span></div>`).join("")}
+              </div>
+            </div>
+
+            <!-- Variable types -->
+            <div style="background:#1a1508;border:3px solid #000;padding:12px">
+              <div style="font-family:'Press Start 2P',monospace;font-size:7px;color:var(--gold2);margin-bottom:10px">VARIABLE TYPES</div>
+              ${[
+                ["{var::name}","Global, persists across restarts","var"],
+                ["{_name}","Local, only in this trigger","local"],
+                ["{var::name::%player%}","Per-player persistent","per-player"],
+                ["{list::name::*}","List / array variable","list"],
+                ["{global::name}","Explicit global flag","global"],
+              ].map(([syn,desc,tag])=>`
+                <div style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #2a2010">
+                  <div style="color:var(--orange2);margin-bottom:3px">${syn}</div>
+                  <div style="color:var(--text3);font-size:13px">${desc}</div>
+                </div>`).join("")}
+            </div>
+
+            <!-- Common patterns -->
+            <div style="background:#1a1508;border:3px solid #000;padding:12px;grid-column:span 2">
+              <div style="font-family:'Press Start 2P',monospace;font-size:7px;color:var(--gold2);margin-bottom:10px">COMMON PATTERNS</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                ${[
+                  ["Cooldown","set {cd::%player%} to true\nwait 5 seconds\ndelete {cd::%player%}"],
+                  ["Points system","add 1 to {var::points::%player%}\nif {var::points::%player%} > 10:\n    give player 1 diamond"],
+                  ["Kit command","on command \"/kit\":\n    if player has permission \"kit.basic\":\n        give player 1 diamond sword\n        give player 32 arrow"],
+                  ["Spawn protection","on break:\n    if world's name is \"spawn\":\n        cancel event\n        send \"&cSpawn is protected!\" to player"],
+                  ["Custom join msg","on join:\n    send title \"&6Welcome\" to player\n    send subtitle \"&7%player%\" to player\n    play sound \"entity.player.levelup\" to player at volume 1 with pitch 1"],
+                  ["Timed announce","every 300 seconds:\n    broadcast \"&a[Server] &fRemember the rules!\""],
+                ].map(([title,code])=>`
+                  <div style="background:#100e06;border:2px solid #2a2010;padding:8px">
+                    <div style="font-family:'Press Start 2P',monospace;font-size:6px;color:var(--green2);margin-bottom:6px">${title}</div>
+                    <pre style="color:#88cc88;font-size:13px;white-space:pre;overflow-x:auto">${code}</pre>
+                  </div>`).join("")}
+              </div>
+            </div>
+
+          </div><!-- /grid -->
+
+          <div style="margin-top:14px;padding:12px;background:#1a1508;border:3px solid #000">
+            <div style="font-family:'Press Start 2P',monospace;font-size:7px;color:var(--gold2);margin-bottom:8px">FULL DOCUMENTATION</div>
+            <div style="color:var(--text2);line-height:2">
+              Full syntax reference (all events, expressions, effects, conditions):<br>
+              <a href="https://skripthub.net/docs/" target="_blank" style="color:var(--diamond2)">→ skripthub.net/docs</a>
+              &nbsp;&nbsp;&nbsp;
+              <a href="https://docs.skunity.com/addons/Skript" target="_blank" style="color:var(--diamond2)">→ docs.skunity.com</a><br>
+              Download latest Skript:<br>
+              <a href="https://github.com/SkriptLang/Skript/releases" target="_blank" style="color:var(--diamond2)">→ github.com/SkriptLang/Skript/releases</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div><!-- /view-docs -->
+
+</div><!-- /main -->
+
+<!-- ══ STATUSBAR ═══════════════════════════════════════════════════════════ -->
 <div class="statusbar">
   <div class="stat">BLOCKS <span id="statBlocks">0</span></div>
   <div class="stat">LINES <span id="statLines">0</span></div>
   <div class="stat">EVENTS <span id="statEvents">0</span></div>
   <div class="stat">ERRORS <span id="statErrors" style="color:var(--green2)">0</span></div>
-  <div class="stat">WARNS <span id="statWarns" style="color:var(--green2)">0</span></div>
-  <div class="stat stat-right">SKRIPTFORGE V2 · MC 26.1.2</div>
+  <div class="stat stat-right">SKRIPTFORGE · MC 26.1.2 · SKRIPT 2.15</div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<!-- ── TOOLBOX ── -->
+<!-- ══ TOOLBOX ══════════════════════════════════════════════════════════════ -->
 <xml id="toolbox" style="display:none">
-  <category name="EVENTS" colour="#c47a00">
-    <label text="— Player —"></label>
+
+  <!-- ── EVENTS ── -->
+  <category name="⚡ PLAYER EVENTS" colour="#b06000">
     <block type="sk_on_join"></block>
     <block type="sk_on_quit"></block>
+    <block type="sk_on_first_join"></block>
     <block type="sk_on_chat"></block>
-    <block type="sk_on_command"></block>
     <block type="sk_on_death"></block>
     <block type="sk_on_respawn"></block>
     <block type="sk_on_damage"></block>
     <block type="sk_on_heal"></block>
+    <block type="sk_on_level_change"></block>
+    <block type="sk_on_xp_change"></block>
+    <block type="sk_on_food_change"></block>
     <block type="sk_on_sneak"></block>
     <block type="sk_on_sprint"></block>
+    <block type="sk_on_toggle_flight"></block>
     <block type="sk_on_move"></block>
-    <label text="— World —"></label>
+    <block type="sk_on_teleport"></block>
+    <block type="sk_on_bed_enter"></block>
+    <block type="sk_on_bed_leave"></block>
+    <block type="sk_on_kick"></block>
+    <block type="sk_on_gamemode_change"></block>
+    <block type="sk_on_armor_change"></block>
+    <block type="sk_on_command"></block>
+    <block type="sk_command_block"></block>
+  </category>
+
+  <category name="⛏ BLOCK / ITEM EVENTS" colour="#b06000">
     <block type="sk_on_break"></block>
     <block type="sk_on_place"></block>
     <block type="sk_on_right_click"></block>
     <block type="sk_on_left_click"></block>
+    <block type="sk_on_right_click_block"></block>
+    <block type="sk_on_sign_change"></block>
+    <block type="sk_on_redstone"></block>
     <block type="sk_on_item_drop"></block>
     <block type="sk_on_item_pickup"></block>
+    <block type="sk_on_item_damage"></block>
     <block type="sk_on_consume"></block>
     <block type="sk_on_craft"></block>
+    <block type="sk_on_enchant"></block>
+    <block type="sk_on_arrow_pickup"></block>
+    <block type="sk_on_item_cooldown"></block>
+  </category>
+
+  <category name="📋 INVENTORY EVENTS" colour="#b06000">
+    <block type="sk_on_inventory_open"></block>
+    <block type="sk_on_inventory_close"></block>
     <block type="sk_on_inventory_click"></block>
+    <block type="sk_on_inventory_drag"></block>
+    <block type="sk_on_inv_item_move"></block>
+  </category>
+
+  <category name="👾 ENTITY EVENTS" colour="#b06000">
     <block type="sk_on_entity_spawn"></block>
     <block type="sk_on_entity_death"></block>
+    <block type="sk_on_entity_damage"></block>
     <block type="sk_on_projectile_hit"></block>
-    <label text="— Server —"></label>
+    <block type="sk_on_projectile_launch"></block>
+    <block type="sk_on_entity_transform"></block>
+    <block type="sk_on_exp_spawn"></block>
+  </category>
+
+  <category name="🖥 SERVER EVENTS" colour="#b06000">
     <block type="sk_on_server_start"></block>
     <block type="sk_on_server_stop"></block>
+    <block type="sk_on_weather_change"></block>
+    <block type="sk_on_lightning"></block>
+    <block type="sk_on_world_load"></block>
+    <block type="sk_on_world_unload"></block>
+    <block type="sk_on_chunk_load"></block>
+    <block type="sk_on_portal_create"></block>
     <block type="sk_every_x_seconds"></block>
+    <block type="sk_every_x_ticks"></block>
   </category>
-  <category name="CONDITIONS" colour="#1a6aab">
-    <label text="— Player —"></label>
+
+  <!-- ── CONDITIONS ── -->
+  <category name="👤 PLAYER CONDITIONS" colour="#1a5a9a">
     <block type="sk_if_permission"></block>
     <block type="sk_if_gamemode"></block>
     <block type="sk_if_world"></block>
-    <block type="sk_if_health_below"></block>
-    <block type="sk_if_health_above"></block>
-    <block type="sk_if_food_below"></block>
-    <block type="sk_if_online"></block>
     <block type="sk_if_op"></block>
     <block type="sk_if_sneaking"></block>
     <block type="sk_if_flying"></block>
     <block type="sk_if_sprinting"></block>
     <block type="sk_if_on_ground"></block>
-    <label text="— Items / Blocks —"></label>
+    <block type="sk_if_sleeping"></block>
+    <block type="sk_if_in_vehicle"></block>
+    <block type="sk_if_gliding"></block>
+    <block type="sk_if_swimming"></block>
+    <block type="sk_if_online"></block>
+    <block type="sk_if_health_below"></block>
+    <block type="sk_if_health_above"></block>
+    <block type="sk_if_food_below"></block>
+    <block type="sk_if_level_above"></block>
     <block type="sk_if_holding"></block>
     <block type="sk_if_has_item"></block>
+    <block type="sk_if_wearing"></block>
+  </category>
+
+  <category name="🟫 BLOCK CONDITIONS" colour="#1a5a9a">
     <block type="sk_if_block_is"></block>
-    <label text="— Variables —"></label>
+    <block type="sk_if_block_at_is"></block>
+  </category>
+
+  <category name="📊 VARIABLE CONDITIONS" colour="#1a5a9a">
     <block type="sk_if_var_equals"></block>
+    <block type="sk_if_var_num_equals"></block>
     <block type="sk_if_var_greater"></block>
     <block type="sk_if_var_less"></block>
     <block type="sk_if_var_set"></block>
-    <label text="— Logic —"></label>
+    <block type="sk_if_var_not_set"></block>
+  </category>
+
+  <category name="↩ LOGIC" colour="#1a5a9a">
     <block type="sk_else"></block>
     <block type="sk_else_if_perm"></block>
   </category>
-  <category name="MESSAGES" colour="#1a7a6e">
+
+  <!-- ── MESSAGES ── -->
+  <category name="💬 MESSAGES" colour="#1a7060">
     <block type="sk_send_message"></block>
     <block type="sk_send_title"></block>
     <block type="sk_send_subtitle"></block>
     <block type="sk_send_actionbar"></block>
     <block type="sk_broadcast"></block>
+    <block type="sk_broadcast_world"></block>
+    <block type="sk_send_to_player"></block>
     <block type="sk_log_console"></block>
   </category>
-  <category name="PLAYER" colour="#3a7a2a">
-    <label text="— State —"></label>
+
+  <!-- ── PLAYER ACTIONS ── -->
+  <category name="⚙ GAME STATE" colour="#2a6a1a">
     <block type="sk_set_gamemode"></block>
     <block type="sk_set_health"></block>
     <block type="sk_heal"></block>
     <block type="sk_set_food"></block>
+    <block type="sk_set_max_health"></block>
     <block type="sk_add_xp"></block>
     <block type="sk_set_level"></block>
+    <block type="sk_set_xp_progress"></block>
     <block type="sk_set_fly"></block>
-    <label text="— Movement —"></label>
+    <block type="sk_allow_flight"></block>
+    <block type="sk_disallow_flight"></block>
+    <block type="sk_set_walk_speed"></block>
+    <block type="sk_set_fly_speed"></block>
+    <block type="sk_set_display_name"></block>
+    <block type="sk_set_tab_name"></block>
+  </category>
+
+  <category name="🧭 MOVEMENT" colour="#2a6a1a">
     <block type="sk_teleport_spawn"></block>
+    <block type="sk_teleport_bed"></block>
     <block type="sk_teleport_coords"></block>
-    <label text="— Items —"></label>
+    <block type="sk_push_entity"></block>
+  </category>
+
+  <category name="🎁 ITEMS" colour="#2a6a1a">
     <block type="sk_give_item"></block>
     <block type="sk_remove_item"></block>
     <block type="sk_clear_inventory"></block>
-    <label text="— Moderation —"></label>
+    <block type="sk_drop_item"></block>
+    <block type="sk_enchant_held"></block>
+  </category>
+
+  <category name="🔨 MODERATION" colour="#2a6a1a">
     <block type="sk_kick"></block>
     <block type="sk_ban"></block>
+    <block type="sk_ip_ban"></block>
     <block type="sk_op"></block>
     <block type="sk_deop"></block>
   </category>
-  <category name="EFFECTS" colour="#6a2a8a">
+
+  <!-- ── WORLD EFFECTS ── -->
+  <category name="✨ VISUAL FX" colour="#5a2080">
     <block type="sk_spawn_particle"></block>
     <block type="sk_play_sound"></block>
+    <block type="sk_lightning_safe"></block>
+  </category>
+
+  <category name="🧪 POTION EFFECTS" colour="#5a2080">
     <block type="sk_apply_effect"></block>
     <block type="sk_remove_effect"></block>
     <block type="sk_clear_effects"></block>
+  </category>
+
+  <category name="🌍 WORLD" colour="#5a2080">
     <block type="sk_set_block"></block>
-    <block type="sk_explosion"></block>
-    <block type="sk_lightning"></block>
-    <block type="sk_spawn_mob"></block>
+    <block type="sk_set_block_coords"></block>
     <block type="sk_set_weather"></block>
     <block type="sk_set_time"></block>
+    <block type="sk_drop_block_loot"></block>
+    <block type="sk_explosion"></block>
+    <block type="sk_lightning"></block>
+  </category>
+
+  <category name="👾 ENTITIES" colour="#5a2080">
+    <block type="sk_spawn_mob"></block>
+    <block type="sk_spawn_mob_name"></block>
+    <block type="sk_kill_nearby"></block>
+  </category>
+
+  <category name="▶ COMMANDS / FLOW" colour="#5a2080">
     <block type="sk_run_command"></block>
     <block type="sk_run_console"></block>
     <block type="sk_wait"></block>
+    <block type="sk_wait_ticks"></block>
     <block type="sk_cancel_event"></block>
     <block type="sk_stop"></block>
   </category>
-  <category name="VARIABLES" colour="#8a5a00">
+
+  <!-- ── VARIABLES ── -->
+  <category name="📦 SET VARIABLES" colour="#7a4800">
     <block type="sk_set_var_str"></block>
     <block type="sk_set_var_num"></block>
     <block type="sk_set_player_var"></block>
+    <block type="sk_set_global_var"></block>
     <block type="sk_delete_var"></block>
-    <block type="sk_add_to_var"></block>
+  </category>
+
+  <category name="🔢 MATH VARIABLES" colour="#7a4800">
+    <block type="sk_add_var"></block>
     <block type="sk_subtract_var"></block>
-    <block type="sk_add_to_list"></block>
+    <block type="sk_multiply_var"></block>
+    <block type="sk_divide_var"></block>
+  </category>
+
+  <category name="📋 LIST VARIABLES" colour="#7a4800">
+    <block type="sk_add_list"></block>
+    <block type="sk_remove_list"></block>
     <block type="sk_clear_list"></block>
   </category>
-  <category name="LOOPS" colour="#1a6a6a">
+
+  <!-- ── CONTROL ── -->
+  <category name="🔁 LOOPS" colour="#1a5a5a">
     <block type="sk_loop_players"></block>
     <block type="sk_loop_times"></block>
     <block type="sk_loop_list"></block>
+    <block type="sk_loop_entities"></block>
+    <block type="sk_while_var"></block>
     <block type="sk_exit_loop"></block>
+    <block type="sk_exit_loops"></block>
     <block type="sk_continue"></block>
     <block type="sk_async"></block>
   </category>
-  <category name="FUNCTIONS" colour="#7a1a1a">
+
+  <!-- ── FUNCTIONS ── -->
+  <category name="🧩 FUNCTIONS" colour="#7a1010">
     <block type="sk_function_def"></block>
     <block type="sk_function_call"></block>
     <block type="sk_function_return"></block>
   </category>
+
+  <!-- ── COMMENTS ── -->
+  <category name="# COMMENTS" colour="#333355">
+    <block type="sk_comment"></block>
+  </category>
+
 </xml>
 
+<script src="profanity.js"></script>
 <script src="blocks.js"></script>
 <script src="compiler.js"></script>
 <script src="validator.js"></script>

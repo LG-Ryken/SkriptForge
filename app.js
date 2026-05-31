@@ -3,37 +3,46 @@
   "use strict";
 
   let workspace = null;
-  let wrapLines = false;
 
   // ── Boot ───────────────────────────────────────────────────────────────────
   document.addEventListener("DOMContentLoaded", () => {
+    showTab("editor");
     initBlockly();
-    initDivider();
+    initDividers();
+    loadPublished();
   });
 
-  // ── Blockly ────────────────────────────────────────────────────────────────
+  // ── Tab switching ──────────────────────────────────────────────────────────
+  window.showTab = function (tab) {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+    document.querySelectorAll(".tab-view").forEach(v => v.style.display = v.id === "view-" + tab ? "flex" : "none");
+    if (tab === "publish") loadPublished();
+  };
+
+  // ── Blockly init ───────────────────────────────────────────────────────────
   function initBlockly() {
     workspace = Blockly.inject("blocklyDiv", {
       toolbox: document.getElementById("toolbox"),
       theme: Blockly.Theme.defineTheme("sf", {
         base: Blockly.Themes.Classic,
         componentStyles: {
-          workspaceBackgroundColour: "#13151f",
-          toolboxBackgroundColour:   "#1a1d27",
-          toolboxForegroundColour:   "#cccccc",
-          flyoutBackgroundColour:    "#1e2130",
-          flyoutForegroundColour:    "#e0e0e0",
+          workspaceBackgroundColour: "#15120a",
+          toolboxBackgroundColour:   "#1a1608",
+          toolboxForegroundColour:   "#d4c484",
+          flyoutBackgroundColour:    "#201a0c",
+          flyoutForegroundColour:    "#e0d090",
           flyoutOpacity: 1,
-          scrollbarColour: "#2a2e3e",
-          insertionMarkerColour: "#5b9e3f",
-          insertionMarkerOpacity: 0.3,
+          scrollbarColour: "#5a4a20",
+          insertionMarkerColour: "#7dba5c",
+          insertionMarkerOpacity: 0.4,
         },
+        fontStyle: { family: "system-ui, sans-serif", size: 12 },
       }),
-      grid:     { spacing: 24, length: 3, colour: "#1e2130", snap: true },
-      move:     { scrollbars: true, drag: true, wheel: true },
-      zoom:     { controls: true, wheel: true, startScale: 0.9, maxScale: 2.5, minScale: 0.3, scaleSpeed: 1.1 },
+      grid: { spacing: 20, length: 3, colour: "#1e1a0e", snap: true },
+      move: { scrollbars: true, drag: true, wheel: true },
+      zoom: { controls: true, wheel: true, startScale: 0.85, maxScale: 2.5, minScale: 0.3, scaleSpeed: 1.1 },
       trashcan: true,
-      sounds:   false,
+      sounds: false,
     });
     workspace.addChangeListener(onWorkspaceChange);
   }
@@ -47,75 +56,50 @@
   function renderAll() {
     const code = SF_Compiler.generate(workspace);
     const { errors, warnings } = SF_Validator.validate(workspace);
-    renderCode(code, errors, warnings);
+    renderCode(code, errors);
     renderDiagnostics(errors, warnings);
     updateStats(errors, warnings);
-    highlightBlocks(errors);
+    workspace.getAllBlocks(false).forEach(b => b.setHighlighted(false));
+    errors.forEach(({ id }) => workspace.getBlockById(id)?.setHighlighted(true));
   }
 
-  // ── Code panel ─────────────────────────────────────────────────────────────
-  function renderCode(code, errors, warnings) {
+  // ── Code output ────────────────────────────────────────────────────────────
+  function renderCode(code, errors) {
     const el = document.getElementById("codeArea");
-
     if (!code) {
       el.innerHTML = `<div class="empty-state">
-        <div class="es-icon">🧱</div>
-        <p>Drag an <b>Event</b> block onto the canvas to start,<br>or click <b>Paste Code</b> to import existing Skript.</p>
+        <div class="es-icon">⛏</div>
+        <p>DRAG AN EVENT BLOCK<br>OR PASTE CODE ON THE LEFT</p>
       </div>`;
+      document.getElementById("btnCopy").classList.remove("btn-err");
       return;
     }
-
-    const hasErrors = errors.length > 0;
     const html = SF_Compiler.highlight(code);
-    el.innerHTML = `<code class="sk-code" style="white-space:${wrapLines ? "pre-wrap" : "pre"}">${html}</code>`;
-
-    // Copy button state
-    const btn = document.getElementById("btnCopy");
-    if (hasErrors) {
-      btn.classList.add("btn-err");
-      btn.title = `${errors.length} error(s) — fix before using`;
-    } else {
-      btn.classList.remove("btn-err");
-      btn.title = "";
-    }
+    el.innerHTML = `<code class="sk-code">${html}</code>`;
+    document.getElementById("btnCopy").classList.toggle("btn-err", errors.length > 0);
   }
 
-  // ── Diagnostics ────────────────────────────────────────────────────────────
+  // ── Diagnostics panel ─────────────────────────────────────────────────────
   function renderDiagnostics(errors, warnings) {
     let panel = document.getElementById("diagPanel");
-
-    if (!errors.length && !warnings.length) {
-      if (panel) panel.remove();
-      return;
-    }
-
+    if (!errors.length && !warnings.length) { panel?.remove(); return; }
     if (!panel) {
       panel = document.createElement("div");
       panel.id = "diagPanel";
       document.getElementById("codePanel").appendChild(panel);
     }
-
     const items = [
       ...errors.map(e => ({ ...e, kind:"error" })),
       ...warnings.map(w => ({ ...w, kind:"warn" })),
     ];
-
-    panel.innerHTML = items.map(item => {
-      const isErr = item.kind === "error";
-      return `<div class="diag-item diag-${item.kind}" onclick="SkriptForgeApp.focusBlock('${item.id}')">
-        <div class="diag-head">${isErr ? "🔴 Error" : "🟡 Warning"}
-          <span class="diag-hint">click to highlight block</span>
+    panel.innerHTML = items.map(item => `
+      <div class="diag-item diag-${item.kind}" onclick="SkriptForgeApp.focusBlock('${item.id}')">
+        <div class="diag-head">${item.kind === "error" ? "🔴 ERROR" : "🟡 WARNING"}
+          <span class="diag-hint">click to highlight</span>
         </div>
         <div class="diag-msg">${item.msg}</div>
-        <div class="diag-fix">💡 ${item.fix}</div>
-      </div>`;
-    }).join("");
-  }
-
-  function highlightBlocks(errors) {
-    if (!workspace) return;
-    workspace.getAllBlocks(false).forEach(b => b.setHighlighted(false));
-    errors.forEach(({ id }) => workspace.getBlockById(id)?.setHighlighted(true));
+        <div class="diag-fix">FIX: ${item.fix}</div>
+      </div>`).join("");
   }
 
   window.SkriptForgeApp = {
@@ -127,137 +111,204 @@
 
   // ── Stats ──────────────────────────────────────────────────────────────────
   function updateStats(errors, warnings) {
-    const all  = workspace.getAllBlocks(false);
-    const tops = workspace.getTopBlocks(false);
-    const code = SF_Compiler.generate(workspace);
+    const all   = workspace.getAllBlocks(false);
+    const tops  = workspace.getTopBlocks(false);
+    const code  = SF_Compiler.generate(workspace);
     const lines = code ? code.split("\n").filter(l => l.trim()).length : 0;
-    const evts  = tops.filter(b => b.type.startsWith("sk_on_") || b.type === "sk_every_x_seconds" || b.type === "sk_function_def").length;
-
-    document.getElementById("statBlocks").textContent  = all.length;
-    document.getElementById("statLines").textContent   = lines;
-    document.getElementById("statEvents").textContent  = evts;
-    document.getElementById("statErrors").textContent  = errors.length;
-    document.getElementById("statErrors").style.color  = errors.length ? "#e06c75" : "#4ec9b0";
-    document.getElementById("statWarns").textContent   = warnings.length;
-    document.getElementById("statWarns").style.color   = warnings.length ? "#d19a66" : "#4ec9b0";
+    const evts  = tops.filter(b => b.type.startsWith("sk_on_") || b.type.startsWith("sk_every") || b.type === "sk_function_def" || b.type === "sk_command_block").length;
+    set("statBlocks", all.length);
+    set("statLines", lines);
+    set("statEvents", evts);
+    const errEl = document.getElementById("statErrors");
+    errEl.textContent = errors.length;
+    errEl.style.color = errors.length ? "#ff6666" : "#55cc33";
   }
+  function set(id, v) { const el = document.getElementById(id); if (el) el.textContent = v; }
 
-  // ── Actions (called from HTML) ─────────────────────────────────────────────
+  // ── Import (paste → blocks) ────────────────────────────────────────────────
+  window.parseAndLoad = function () {
+    const text = document.getElementById("pasteInput").value.trim();
+    const statusEl = document.getElementById("parseStatus");
+    if (!text) { statusEl.textContent = ""; return; }
+
+    const { xml, unknown } = SF_Compiler.reverseCompile(text);
+
+    if (!xml) {
+      statusEl.className = "status-err";
+      statusEl.textContent = "✗ No recognisable Skript blocks found. Check syntax.";
+      return;
+    }
+
+    workspace.clear();
+    try {
+      Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(xml), workspace);
+    } catch (err) {
+      statusEl.className = "status-err";
+      statusEl.textContent = "✗ XML error: " + err.message;
+      return;
+    }
+
+    workspace.scrollCenter();
+
+    if (unknown.length) {
+      const skipped = unknown.slice(0, 5).map(u => `Line ${u.lineNum}: ${u.raw}`).join("\n");
+      statusEl.className = "status-warn";
+      statusEl.textContent = `⚠ Imported with ${unknown.length} skipped line(s)`;
+      // Show details in a small collapsible below
+      document.getElementById("unknownDetails").textContent = skipped + (unknown.length > 5 ? `\n...+${unknown.length - 5} more` : "");
+      document.getElementById("unknownDetails").style.display = "block";
+    } else {
+      statusEl.className = "status-ok";
+      statusEl.textContent = `✓ Imported ${workspace.getAllBlocks(false).length} blocks`;
+      document.getElementById("unknownDetails").style.display = "none";
+    }
+    // Switch to editor tab
+    showTab("editor");
+    toast("✓ Code imported!");
+  };
+
+  window.clearPaste = function () {
+    document.getElementById("pasteInput").value = "";
+    document.getElementById("parseStatus").textContent = "";
+    document.getElementById("unknownDetails").style.display = "none";
+  };
+
+  // ── Copy ───────────────────────────────────────────────────────────────────
+  window.copyCode = function () {
+    const code = document.querySelector(".sk-code");
+    if (!code) return;
+    // Get plain text: strip line-number spans
+    const lines = [];
+    code.querySelectorAll("span[class^='sk-'], span.sk-blank, span.sk-comment, span.sk-event, span.sk-cond, span.sk-loop, span.sk-func, span.sk-var, span.sk-msg, span.sk-eff, span.sk-act, span.sk-plain").forEach(s => {
+      lines.push(s.textContent);
+    });
+    // Fallback: innerText without line numbers
+    const text = code.innerText.split("\n").map(l => l.replace(/^\s{0,3}\d+\s*/, "")).join("\n");
+    navigator.clipboard.writeText(text.trim()).then(() => toast("✓ Copied!"));
+  };
+
   window.clearWorkspace = function () {
     if (!workspace || !workspace.getAllBlocks(false).length) return;
     if (!confirm("Clear the workspace?")) return;
     workspace.clear();
   };
 
-  window.copyCode = function () {
-    const el = document.getElementById("codeArea");
-    const code = el.querySelector(".sk-code");
-    if (!code) return;
-    // Strip line number spans, get plain text
-    const text = Array.from(code.querySelectorAll("span")).map(s => {
-      return s.classList.contains("ln") ? "" : s.textContent;
-    }).join("").split("\n").join("\n");
-    navigator.clipboard.writeText(text).then(() => toast("✓ Copied!"));
+  // ── Publish ────────────────────────────────────────────────────────────────
+  function getScripts() {
+    try { return JSON.parse(localStorage.getItem("sf_published") || "[]"); } catch { return []; }
+  }
+  function saveScripts(arr) { localStorage.setItem("sf_published", JSON.stringify(arr)); }
+
+  window.publishScript = function () {
+    const username = document.getElementById("pubUsername").value.trim();
+    const title    = document.getElementById("pubTitle").value.trim();
+    const code     = document.getElementById("pubCode").value.trim();
+    const errEl    = document.getElementById("pubError");
+
+    errEl.textContent = "";
+
+    // Validate
+    if (!username) { errEl.textContent = "Username is required."; return; }
+    if (username.length < 2 || username.length > 24) { errEl.textContent = "Username must be 2–24 characters."; return; }
+    if (!/^[a-zA-Z0-9_\-]+$/.test(username)) { errEl.textContent = "Username: letters, numbers, _ and - only."; return; }
+    if (!title)    { errEl.textContent = "Title is required."; return; }
+    if (title.length < 3 || title.length > 60) { errEl.textContent = "Title must be 3–60 characters."; return; }
+    if (!code)     { errEl.textContent = "Script code is required."; return; }
+    if (code.length > 20000) { errEl.textContent = "Script too long (max 20,000 chars)."; return; }
+
+    // Profanity check
+    for (const [field, val] of [["Username", username], ["Title", title], ["Code", code]]) {
+      const r = SF_Filter.check(val);
+      if (!r.ok) { errEl.textContent = `${field} contains a disallowed word.`; return; }
+    }
+
+    const scripts = getScripts();
+    scripts.unshift({ username, title, code, date: new Date().toLocaleDateString() });
+    saveScripts(scripts);
+    loadPublished();
+
+    // Clear form
+    document.getElementById("pubUsername").value = "";
+    document.getElementById("pubTitle").value = "";
+    document.getElementById("pubCode").value = "";
+    toast("✓ Published!");
   };
 
-  window.downloadSk = function () {
-    const el = document.getElementById("codeArea");
-    const code = el.querySelector(".sk-code");
-    if (!code) return;
-    const text = Array.from(code.querySelectorAll("span")).map(s => {
-      return s.classList.contains("ln") ? "" : s.textContent;
-    }).join("");
-    const blob = new Blob([text.trim()], { type: "text/plain" });
-    const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: "script.sk" });
-    a.click();
-    toast("⬇ Downloaded script.sk");
-  };
-
-  window.toggleWrap = function () {
-    wrapLines = !wrapLines;
-    document.getElementById("btnWrap").classList.toggle("active", wrapLines);
-    renderAll();
-  };
-
-  // ── Paste Code modal ───────────────────────────────────────────────────────
-  window.openPasteModal = function () {
-    document.getElementById("pasteInput").value = "";
-    document.getElementById("pasteError").textContent = "";
-    document.getElementById("pasteModal").classList.add("open");
-    setTimeout(() => document.getElementById("pasteInput").focus(), 100);
-  };
-
-  window.closePasteModal = function () {
-    document.getElementById("pasteModal").classList.remove("open");
-  };
-
-  window.parseAndLoad = function () {
-    const text = document.getElementById("pasteInput").value.trim();
-    if (!text) return;
-
-    const { xml, unknown } = SF_Compiler.reverseCompile(text);
-
-    if (!xml) {
-      document.getElementById("pasteError").textContent =
-        "Could not find any recognisable Skript blocks. Check the code is valid Skript 2.9 syntax.";
+  window.loadPublished = function () {
+    const list = document.getElementById("publishedList");
+    if (!list) return;
+    const scripts = getScripts();
+    if (!scripts.length) {
+      list.innerHTML = `<div class="pub-empty">NO SCRIPTS PUBLISHED YET.<br>BE THE FIRST!</div>`;
       return;
     }
-
-    // Load into workspace
-    workspace.clear();
-    try {
-      const dom = Blockly.Xml.textToDom(xml);
-      Blockly.Xml.domToWorkspace(dom, workspace);
-    } catch (err) {
-      document.getElementById("pasteError").textContent = "XML parse error: " + err.message;
-      return;
-    }
-
-    closePasteModal();
-
-    if (unknown.length) {
-      const msg = `Imported with ${unknown.length} unrecognised line(s) skipped:\n` +
-        unknown.slice(0, 5).map(u => `  Line ${u.lineNum}: ${u.raw}`).join("\n") +
-        (unknown.length > 5 ? `\n  ...and ${unknown.length - 5} more` : "");
-      setTimeout(() => alert(msg), 200);
-    } else {
-      toast(`✓ Imported ${workspace.getAllBlocks(false).length} blocks`);
-    }
-
-    workspace.scrollCenter();
+    list.innerHTML = scripts.map((s, i) => `
+      <div class="pub-card">
+        <div class="pub-header">
+          <span class="pub-title">${esc(s.title)}</span>
+          <span class="pub-meta">by ${esc(s.username)} · ${esc(s.date)}</span>
+        </div>
+        <pre class="pub-code">${esc(s.code)}</pre>
+        <div class="pub-actions">
+          <button class="mc-btn btn-teal" onclick="loadPublishedScript(${i})">LOAD INTO EDITOR</button>
+          <button class="mc-btn btn-stone" onclick="copyPublished(${i})">COPY .SK</button>
+          <button class="mc-btn btn-red-sm" onclick="deletePublished(${i})">DELETE</button>
+        </div>
+      </div>`).join("");
   };
 
-  // Close modal on Escape or backdrop click
-  document.addEventListener("keydown", e => {
-    if (e.key === "Escape") document.querySelectorAll(".modal-backdrop.open").forEach(m => m.classList.remove("open"));
-  });
-  document.addEventListener("click", e => {
-    if (e.target.classList.contains("modal-backdrop")) e.target.classList.remove("open");
-  });
+  function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
-  // ── Divider resize ─────────────────────────────────────────────────────────
-  function initDivider() {
-    const div   = document.getElementById("divider");
-    const panel = document.getElementById("codePanel");
+  window.copyPublished = function (i) {
+    const s = getScripts()[i];
+    if (!s) return;
+    navigator.clipboard.writeText(s.code).then(() => toast("✓ Copied!"));
+  };
+
+  window.loadPublishedScript = function (i) {
+    const s = getScripts()[i];
+    if (!s) return;
+    document.getElementById("pasteInput").value = s.code;
+    showTab("editor");
+    parseAndLoad();
+  };
+
+  window.deletePublished = function (i) {
+    if (!confirm("Delete this script?")) return;
+    const scripts = getScripts();
+    scripts.splice(i, 1);
+    saveScripts(scripts);
+    loadPublished();
+  };
+
+  // ── Divider resizing ───────────────────────────────────────────────────────
+  function initDividers() {
+    makeDivider("dividerLeft", "pastePanel", "left");
+    makeDivider("dividerRight", "codePanel", "right");
+  }
+
+  function makeDivider(divId, panelId, side) {
+    const div = document.getElementById(divId);
+    const panel = document.getElementById(panelId);
+    if (!div || !panel) return;
     let dragging = false, startX = 0, startW = 0;
-
     div.addEventListener("mousedown", e => {
       dragging = true; startX = e.clientX; startW = panel.offsetWidth;
       div.classList.add("dragging");
-      document.body.style.cssText += ";cursor:col-resize;user-select:none";
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
     });
     document.addEventListener("mousemove", e => {
       if (!dragging) return;
-      const w = Math.max(200, Math.min(window.innerWidth * 0.7, startW + (startX - e.clientX)));
+      const delta = side === "left" ? e.clientX - startX : startX - e.clientX;
+      const w = Math.max(160, Math.min(window.innerWidth * 0.4, startW + delta));
       panel.style.width = w + "px";
     });
     document.addEventListener("mouseup", () => {
       if (!dragging) return;
-      dragging = false;
-      div.classList.remove("dragging");
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
-      Blockly.svgResize(workspace);
+      dragging = false; div.classList.remove("dragging");
+      document.body.style.cursor = ""; document.body.style.userSelect = "";
+      if (workspace) Blockly.svgResize(workspace);
     });
   }
 
@@ -269,5 +320,8 @@
     clearTimeout(el._t);
     el._t = setTimeout(() => el.classList.remove("show"), 2400);
   }
+
+  // Export for publish page
+  window.SF_toast = toast;
 
 })();
